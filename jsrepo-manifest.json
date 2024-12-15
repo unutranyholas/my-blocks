@@ -11,12 +11,14 @@
 				"list": true,
 				"files": [
 					"config.ts",
-					"index.ts"
+					"index.ts",
+					"visualizer.tsx"
 				],
 				"localDependencies": [],
 				"dependencies": [
 					"@deepgram/sdk@^3.9.0",
-					"xstate@^5.19.0"
+					"xstate@^5.19.0",
+					"react@^19.0.0"
 				],
 				"devDependencies": [],
 				"_imports_": {}
