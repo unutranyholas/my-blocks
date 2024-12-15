@@ -1,0 +1,26 @@
+[
+	{
+		"name": "machines",
+		"blocks": [
+			{
+				"name": "recorder",
+				"directory": "src/machines/recorder",
+				"category": "machines",
+				"tests": false,
+				"subdirectory": true,
+				"list": true,
+				"files": [
+					"config.ts",
+					"index.ts"
+				],
+				"localDependencies": [],
+				"dependencies": [
+					"@deepgram/sdk@^3.9.0",
+					"xstate@^5.19.0"
+				],
+				"devDependencies": [],
+				"_imports_": {}
+			}
+		]
+	}
+]

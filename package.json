@@ -1,0 +1,19 @@
+{
+	"name": "my-blocks",
+	"module": "index.ts",
+	"type": "module",
+	"devDependencies": {
+		"@types/bun": "latest",
+		"jsrepo": "^1.19.3"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"scripts": {
+		"build:registry": "jsrepo build"
+	},
+	"dependencies": {
+		"@deepgram/sdk": "^3.9.0",
+		"xstate": "^5.19.0"
+	}
+}
