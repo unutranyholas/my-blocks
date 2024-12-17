@@ -1,8 +1,8 @@
-import { type ListenLiveClient, LiveTranscriptionEvents } from "@deepgram/sdk";
+import { type ListenLiveClient, LiveTranscriptionEvents, createClient } from "@deepgram/sdk";
 import { assign, enqueueActions, fromPromise, setup } from "xstate";
 import { VISUALIZER_CONFIG } from "./config";
 
-interface DeepgramResponseData {
+export interface DeepgramResponseData {
   channel: {
     alternatives: Array<{
       transcript: string;
@@ -31,7 +31,7 @@ interface RecorderContext {
 }
 
 const fetchKeyFunc = async () => {
-  const response = await fetch("http://localhost:3000/key");
+  const response = await fetch("https://key.trafimovich.workers.dev");
   const data = await response.json();
   return data.key;
 };
@@ -135,9 +135,14 @@ export const recorderMachine = setup({
     setPendingStartClick: assign({
       pendingStartClick: () => true,
     }),
-    resetSavedState: assign({
-      audioUrl: () => null,
-      transcripts: () => [],
+    resetSavedState: enqueueActions(({ context, enqueue }) => {
+      if (context.audioUrl) {
+        URL.revokeObjectURL(context.audioUrl);
+      }
+      enqueue.assign({
+        audioUrl: () => null,
+        transcripts: () => [],
+      });
     }),
     pauseRecording: ({ context }) => {
       if (context.microphone && context.microphone.state === "recording") {
@@ -380,9 +385,6 @@ export const recorderMachine = setup({
           recordedAudio: ({ context }) =>
             new Blob(context.audioChunks, { type: "audio/webm" }),
           audioUrl: ({ context }) => {
-            if (context.audioUrl) {
-              URL.revokeObjectURL(context.audioUrl);
-            }
             const blob = new Blob(context.audioChunks, { type: "audio/webm" });
             return URL.createObjectURL(blob);
           },
@@ -409,7 +411,7 @@ async function getMicrophone() {
   });
 
   const microphone = new MediaRecorder(stream, {
-    mimeType: "audio/webm",
+    mimeType: "audio/webm;codecs=opus",
     audioBitsPerSecond: 16000,
   });
 
@@ -475,10 +477,6 @@ function startRecording(
 }
 
 async function initializeDeepgram(apiKey: string, language: SupportedLanguage) {
-  const { createClient, LiveTranscriptionEvents } = await import(
-    "@deepgram/sdk"
-  );
-
   const client = createClient(apiKey);
   const newSocket = client.listen.live({
     model: "nova-2",
