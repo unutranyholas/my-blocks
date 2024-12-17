@@ -75,7 +75,8 @@ export const Recorder = () => {
   return (
     <div>
       <button type="button" onClick={handleStartClick} onMouseEnter={handleMouseEnter}>
-        {isRecording ? "Stop Recording" : "Start Recording"}
+        {isRecording ? "Stop Recording" : "Start Recording"}{" "}
+        {isRecording && <span>{secondsToTimeString(state.context.elapsedTime)}</span>}
       </button>
 
       {isRecording && (
@@ -102,12 +103,14 @@ export const Recorder = () => {
         <div>
           <h3>Recorded Audio:</h3>
           <audio
-              controls
-              src={state.context.audioUrl ?? undefined}
-              crossOrigin="anonymous"
-            >
-            </audio>
-          </div>
+            controls
+            key={audioUrl}
+            preload="auto"
+          >
+            <source src={state.context.audioUrl ?? undefined} type="audio/webm;codecs=opus" />
+            <track kind="captions" label="English captions" src="" srcLang="en" />
+          </audio>
+        </div>
       )}
     </div>
   );
