@@ -21,7 +21,6 @@ interface RecorderContext {
   pendingStartClick: boolean;
   language: SupportedLanguage;
   audioChunks: Blob[];
-  recordedAudio: Blob | null;
   audioUrl: string | null;
   elapsedTime: number;
   analyser: AnalyserNode | null;
@@ -112,6 +111,7 @@ export const recorderMachine = setup({
     stopRecording: ({ context }) => {
       if (context.microphone) {
         context.microphone.stop();
+        console.log("microphone stopped");
       }
       if (context.socket) {
         context.socket.requestClose();
@@ -128,6 +128,17 @@ export const recorderMachine = setup({
         context.analyser.disconnect();
       }
     },
+    finalizeRecording: enqueueActions(({ context, event, enqueue }) => {
+      if (event.type !== "AUDIO_DATA") return;
+      const blob = new Blob([...context.audioChunks, event.data], { 
+        type: "audio/ogg;codecs=opus" 
+      });
+      const file = new File([blob], "recording.ogg");
+      enqueue.assign({
+        audioUrl: () => URL.createObjectURL(file),
+        audioChunks: () => [],
+      });
+    }),
     invalidateKey: assign({
       prefetchedKey: () => null,
       error: () => null,
@@ -218,7 +229,6 @@ export const recorderMachine = setup({
     pendingStartClick: false,
     language: "ru-RU" as SupportedLanguage,
     audioChunks: [],
-    recordedAudio: null,
     audioUrl: null,
     elapsedTime: 0,
     analyser: null,
@@ -333,7 +343,7 @@ export const recorderMachine = setup({
           }),
         },
         CLICK: {
-          target: "idle",
+          target: "last_chunk",
         },
       },
       initial: "active",
@@ -371,25 +381,32 @@ export const recorderMachine = setup({
       exit: [
         { type: "stopRecording" },
         { type: "stopAnalyzer" },
-        assign({
-          microphone: () => null,
-          socket: () => null,
-          pendingStartClick: () => false,
-          audioChunks: () => [],
-          stream: () => null,
-          prefetchedKey: () => null,
-          elapsedTime: 0,
-          analyser: () => null,
-          dataArray: () => null,
-          audioContext: () => null,
-          recordedAudio: ({ context }) =>
-            new Blob(context.audioChunks, { type: "audio/webm" }),
-          audioUrl: ({ context }) => {
-            const blob = new Blob(context.audioChunks, { type: "audio/webm" });
-            return URL.createObjectURL(blob);
-          },
-        }),
       ],
+    },
+    last_chunk: {
+      on: {
+        AUDIO_DATA: {
+          target: "idle",
+          actions: [  
+            { type: "finalizeRecording",
+              params: ({ event }) => event,
+            }
+          ]
+        },
+        exit: [
+          assign({
+            microphone: () => null,
+            socket: () => null,
+            pendingStartClick: () => false,
+            stream: () => null,
+            prefetchedKey: () => null,
+            elapsedTime: 0,
+            analyser: () => null,
+            dataArray: () => null,
+            audioContext: () => null,
+          }),
+        ],
+      },
     },
   },
   on: {
@@ -411,7 +428,7 @@ async function getMicrophone() {
   });
 
   const microphone = new MediaRecorder(stream, {
-    mimeType: "audio/webm;codecs=opus",
+    mimeType: "audio/ogg;codecs=opus",
     audioBitsPerSecond: 16000,
   });
 
