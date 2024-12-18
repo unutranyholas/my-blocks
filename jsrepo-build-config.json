@@ -9,5 +9,5 @@
 	"includeBlocks": [],
 	"includeCategories": [],
 	"excludeBlocks": [],
-	"excludeCategories": []
+	"excludeCategories": ["stories"]
 }

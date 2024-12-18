@@ -11,13 +11,15 @@
 				"list": true,
 				"files": [
 					"config.ts",
-					"index.ts",
+					"machine.ts",
+					"recorder.tsx",
 					"visualizer.tsx"
 				],
 				"localDependencies": [],
 				"dependencies": [
 					"@deepgram/sdk@^3.9.0",
 					"xstate@^5.19.0",
+					"@xstate/react@^5.0.0",
 					"react@^18.3.1"
 				],
 				"devDependencies": [],
